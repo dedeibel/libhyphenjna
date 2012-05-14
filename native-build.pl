@@ -80,8 +80,16 @@ if ($unixy) { # aah, a sane OS, so life is simple. True.
     chdir $outputDir or die "Unable to chdir to $outputDir: $!";
     opendir D, "." or die "Urgh: $!";
     print "searching for libhyphen in output directory\n";
+<<<<<<< HEAD
     my ($output) = grep {
       unless (!readlink($_) and /^libhyphen\.(so|dylib$)\..*/) {
+=======
+# Name examples:
+# Linux libhyphen.so.0.2.1
+# Mac libhyphen.0.dylib
+    my ($output) = grep {
+      unless (!readlink($_) and /^libhyphen(\.\d+)*\.(so|dylib$)(\.\d+)*/) {
+>>>>>>> 32841c2605e13c50c56d748f7653ea026285d2ef
         print "  $_ ... skipping\n"; 0;
       }
       else {
