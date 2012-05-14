@@ -1,1 +1,8 @@
 build
+._*.c
+*DS_Store
+*.class
+*.swp
+dic
+try
+target/*

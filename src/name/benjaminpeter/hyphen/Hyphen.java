@@ -1,15 +1,12 @@
-package dk.dren.hunspell;
+package name.benjaminpeter.hyphen;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
 import java.io.UnsupportedEncodingException;
 import java.lang.UnsatisfiedLinkError;
 import java.lang.UnsupportedOperationException;
-import java.nio.charset.CharacterCodingException;
-import java.io.File;
+import java.nio.charset.Charset;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
@@ -19,93 +16,88 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;
 
 /**
- * The simple hunspell library frontend which takes care of creating
- * and singleton'ing the library instance (no need to load it more than once
- * per process) .
- *
- * The Hunspell java bindings are licensed under the same terms as Hunspell itself (GPL/LGPL/MPL tri-license),
- * see the file COPYING.txt in the root of the distribution for the exact terms.
- *
- * @author Flemming Frandsen (flfr at stibo dot com)
+ * @author Benjamin Peter <BenjaminPeter@arcor.de>
  */
+public class Hyphen {
 
-public class Hunspell {
-    
-    /**
-     * The Singleton instance of Hunspell
-     */
-    private static Hunspell hunspell = null;
+	private static Hyphen hyphen = null;
 
-    /**
-     * The native library instance, created by JNA.
-     */
-    private HunspellLibrary hsl = null;
-	
+	/**
+	 * The native library instance, created by JNA.
+	 */
+	private HyphenLibrary hsl = null;
+
 	/**
 	 * The library file that was loaded.
 	 */
 	private String libFile;
 
-    /**
-     * The instance of the HunspellManager, looks for the native lib in the
-     * default directories
-     */
-    public static Hunspell getInstance() throws UnsatisfiedLinkError, UnsupportedOperationException { 
+	/**
+	 * The instance of the HunspellManager, looks for the native lib in the
+	 * default directories
+	 */
+	public static Hyphen getInstance() throws UnsatisfiedLinkError,
+			UnsupportedOperationException {
 		return getInstance(null);
-    }
+	}
 
-    /**
-     * The instance of the HunspellManager, looks for the native lib in
-     * the directory specified.
-     *
-     * @param libDir Optional absolute directory where the native lib can be found. 
-     */
-    public static Hunspell getInstance(String libDir) throws UnsatisfiedLinkError, UnsupportedOperationException { 
-        if (hunspell != null) {
-            return hunspell;
-        }
-        
-        hunspell = new Hunspell(libDir);
-        return hunspell;
-    }
+	/**
+	 * The instance of the HunspellManager, looks for the native lib in the
+	 * directory specified.
+	 * 
+	 * @param libDir
+	 *          Optional absolute directory where the native lib can be found.
+	 */
+	public static Hyphen getInstance(final String libDir)
+			throws UnsatisfiedLinkError, UnsupportedOperationException {
+		if (hyphen != null) {
+			return hyphen;
+		}
 
-    protected void tryLoad(String libFile) throws UnsupportedOperationException {
-		hsl = (HunspellLibrary)Native.loadLibrary(libFile, HunspellLibrary.class);
-    }
+		hyphen = new Hyphen(libDir);
+		return hyphen;
+	}
 
+	protected void tryLoad(final String libFile)
+			throws UnsupportedOperationException {
+		hsl = (HyphenLibrary) Native.loadLibrary(libFile, HyphenLibrary.class);
+	}
 
-    /**
-     * Constructor for the library, loads the native lib.
-     *
-     * Loading is done in the first of the following three ways that works:
-     * 1) Unmodified load in the provided directory.
-     * 2) libFile stripped back to the base name (^lib(.*)\.so on unix)
-     * 3) The library is searched for in the classpath, extracted to disk and loaded.
-     *
-     * @param libDir Optional absolute directory where the native lib can be found. 
-     * @throws UnsupportedOperationException if the OS or architecture is simply not supported.
-     */
-    protected Hunspell(String libDir) throws UnsatisfiedLinkError, UnsupportedOperationException {
+	/**
+	 * Constructor for the library, loads the native lib.
+	 * 
+	 * Loading is done in the first of the following three ways that works: 1)
+	 * Unmodified load in the provided directory. 2) libFile stripped back to the
+	 * base name (^lib(.*)\.so on unix) 3) The library is searched for in the
+	 * classpath, extracted to disk and loaded.
+	 * 
+	 * @param libDir
+	 *          Optional absolute directory where the native lib can be found.
+	 * @throws UnsupportedOperationException
+	 *           if the OS or architecture is simply not supported.
+	 */
+	protected Hyphen(final String libDir) throws UnsatisfiedLinkError,
+			UnsupportedOperationException {
 
-		libFile = libDir != null ? libDir+"/"+libName() : libNameBare();
-		try {	   
-			hsl = (HunspellLibrary)Native.loadLibrary(libFile, HunspellLibrary.class);
+		libFile = libDir != null ? libDir + "/" + libName() : libNameBare();
+		try {
+			hsl = (HyphenLibrary) Native.loadLibrary(libFile, HyphenLibrary.class);
 		} catch (UnsatisfiedLinkError urgh) {
-	    
-			// Oh dear, the library was not found in the file system, let's try the classpath
+
+			// Oh dear, the library was not found in the file system, let's try the
+			// classpath
 			libFile = libName();
-			InputStream is = Hunspell.class.getResourceAsStream("/"+libFile);
+			InputStream is = Hyphen.class.getResourceAsStream("/" + libFile);
 			if (is == null) {
-				throw new UnsatisfiedLinkError("Can't find "+libFile+
-											   " in the filesystem nor in the classpath\n"+
-											   urgh);
+				throw new UnsatisfiedLinkError("Can't find " + libFile
+						+ " in the filesystem nor in the classpath\n" + urgh);
 			}
-            
+
 			// Extract the library from the classpath into a temp file.
 			File lib;
 			FileOutputStream fos = null;
 			try {
-				lib = File.createTempFile("jna", "."+libFile);
+				lib = File.createTempFile("jna", "." + libFile);
 				lib.deleteOnExit();
 				fos = new FileOutputStream(lib);
 				int count;
@@ -113,104 +105,115 @@ public class Hunspell {
 				while ((count = is.read(buf, 0, buf.length)) > 0) {
 					fos.write(buf, 0, count);
 				}
-		
-			} catch(IOException e) {
-				throw new Error("Failed to create temporary file for "+libFile, e);
-		
+
+			} catch (IOException e) {
+				throw new Error("Failed to create temporary file for " + libFile, e);
+
 			} finally {
-				try { is.close(); } catch(IOException e) { }
+				try {
+					is.close();
+				} catch (IOException e) {
+				}
 				if (fos != null) {
-					try { fos.close(); } catch(IOException e) { }
+					try {
+						fos.close();
+					} catch (IOException e) {
+					}
 				}
 			}
-			//System.out.println("Loading temp lib: "+lib.getAbsolutePath());
-			hsl = (HunspellLibrary)Native.loadLibrary(lib.getAbsolutePath(), HunspellLibrary.class);
+			System.out.println("Loading temp lib: " + lib.getAbsolutePath());
+			hsl = (HyphenLibrary) Native.loadLibrary(lib.getAbsolutePath(),
+					HyphenLibrary.class);
 		}
-    }
+	}
 
 	public String getLibFile() {
 		return libFile;
 	}
 
-    /**
-     * Calculate the filename of the native hunspell lib.
-     * The files have completely different names to allow them to live
-     * in the same directory and avoid confusion.
-     */
-    public static String libName() throws UnsupportedOperationException {
+	/**
+	 * Calculate the filename of the native hunspell lib. The files have
+	 * completely different names to allow them to live in the same directory and
+	 * avoid confusion.
+	 */
+	public static String libName() throws UnsupportedOperationException {
 		String os = System.getProperty("os.name").toLowerCase();
 		if (os.startsWith("windows")) {
-			return libNameBare()+".dll";
+			return libNameBare() + ".dll";
 
 		} else if (os.startsWith("mac os x")) {
-			//	    return libNameBare()+".dylib";
-			return libNameBare()+".jnilib";
-	
-		} else {
-			return "lib"+libNameBare()+".so";
-		}  
-    }
+			// return libNameBare()+".dylib";
+			return libNameBare() + ".jnilib";
 
-    public static String libNameBare() throws UnsupportedOperationException {
+		} else {
+			return "lib" + libNameBare() + ".so";
+		}
+	}
+
+	public static String libNameBare() throws UnsupportedOperationException {
 		String os = System.getProperty("os.name").toLowerCase();
 		String arch = System.getProperty("os.arch").toLowerCase();
 
 		// Annoying that Java doesn't have consistent names for the arch types:
-		boolean x86  = arch.equals("x86")    || arch.equals("i386")  || arch.equals("i686");
-		boolean amd64= arch.equals("x86_64") || arch.equals("amd64") || arch.equals("ia64n");
-	
+		boolean x86 = arch.equals("x86") || arch.equals("i386")
+				|| arch.equals("i686");
+		boolean amd64 = arch.equals("x86_64") || arch.equals("amd64")
+				|| arch.equals("ia64n");
+
 		if (os.startsWith("windows")) {
 			if (x86) {
-				return "hunspell-win-x86-32";
+				return "hyphen-win-x86-32";
 			}
-			if (amd64) { 
-				return "hunspell-win-x86-64";
+			if (amd64) {
+				return "hyphen-win-x86-64";
 			}
 
 		} else if (os.startsWith("mac os x")) {
 			if (x86) {
-				return "hunspell-darwin-x86-32";
+				return "hyphen-darwin-x86-32";
 			}
 			if (amd64) {
-				return "hunspell-darwin-x86-64";
+				return "hyphen-darwin-x86-64";
 			}
-			if (arch.equals("ppc")) {		    
-				return "hunspell-darwin-ppc-32";
+			if (arch.equals("ppc")) {
+				return "hyphen-darwin-ppc-32";
 			}
 
 		} else if (os.startsWith("linux")) {
 			if (x86) {
-				return "hunspell-linux-x86-32";
+				return "hyphen-linux-x86-32";
 			}
 			if (amd64) {
-				return "hunspell-linux-x86-64";
+				return "hyphen-linux-x86-64";
 			}
-			
+
 		} else if (os.startsWith("sunos")) {
-			//if (arch.equals("sparc")) { 
-			//	return "hunspell-sunos-sparc-64";
-			//}			
+			// if (arch.equals("sparc")) {
+			// return "hyphen-sunos-sparc-64";
+			// }
 		}
-	
-		throw new UnsupportedOperationException("Unknown OS/arch: "+os+"/"+arch);
-    }    
 
-    /**
-     * This is the cache where we keep the already loaded dictionaries around
-     */
-    private HashMap<String, Dictionary> map = new HashMap<String, Dictionary>();
+		throw new UnsupportedOperationException("Unknown OS/arch: " + os + "/"
+				+ arch);
+	}
 
-    /**
-     * Gets an instance of the dictionary. 
-     *
-     * @param baseFileName the base name of the dictionary, 
-     * passing /dict/da_DK means that the files /dict/da_DK.dic
-     * and /dict/da_DK.aff get loaded
-     */
-    public Dictionary getDictionary(String baseFileName)
-		throws FileNotFoundException, UnsupportedEncodingException {
+	/**
+	 * This is the cache where we keep the already loaded dictionaries around
+	 */
+	private final HashMap<String, Dictionary> map = new HashMap<String, Dictionary>();
 
-		// TODO: Detect if the dictionary files have changed and reload if they have.
+	/**
+	 * Gets an instance of the dictionary.
+	 * 
+	 * @param baseFileName
+	 *          the base name of the dictionary, passing /dict/da_DK means that
+	 *          the files /dict/da_DK.dic and /dict/da_DK.aff get loaded
+	 */
+	public Dictionary getDictionary(final String baseFileName)
+			throws FileNotFoundException, UnsupportedEncodingException {
+
+		// TODO: Detect if the dictionary files have changed and reload if they
+		// have.
 		if (map.containsKey(baseFileName)) {
 			return map.get(baseFileName);
 
@@ -219,24 +222,24 @@ public class Hunspell {
 			map.put(baseFileName, d);
 			return d;
 		}
-    }   
+	}
 
-    /**
-     * Removes a dictionary from the internal cache
-     *
-     * @param baseFileName the base name of the dictionary, as passed to
-     * getDictionary()
-     */
-    public void destroyDictionary(String baseFileName) {
+	/**
+	 * Removes a dictionary from the internal cache
+	 * 
+	 * @param baseFileName
+	 *          the base name of the dictionary, as passed to getDictionary()
+	 */
+	public void destroyDictionary(final String baseFileName) {
 		if (map.containsKey(baseFileName)) {
 			map.remove(baseFileName);
 		}
-    }
+	}
 
-    /**
-     * Class representing a single dictionary.
-     */
-    public class Dictionary {
+	/**
+	 * Class representing a single dictionary.
+	 */
+	public class Dictionary {
 		/**
 		 * The pointer to the hunspell object as returned by the hunspell
 		 * constructor.
@@ -246,29 +249,27 @@ public class Hunspell {
 		/**
 		 * The encoding used by this dictionary
 		 */
-		private String encoding;
-	
+		private final String encoding = "UTF8";
 
 		/**
 		 * Creates an instance of the dictionary.
-		 * @param baseFileName the base name of the dictionary, 
+		 * 
+		 * @param baseFileName
+		 *          the base name of the dictionary,
 		 */
-		Dictionary(String baseFileName) throws FileNotFoundException, 
-											   UnsupportedEncodingException {
-			File dic = new File(baseFileName + ".dic");
-			File aff = new File(baseFileName + ".aff");
+		Dictionary(final String baseFileName) throws FileNotFoundException,
+				UnsupportedEncodingException {
+			File dic = new File(baseFileName);
 
-			if (!dic.canRead() || !aff.canRead()) {
-				throw new FileNotFoundException("The dictionary files "+
-												baseFileName+
-												"(.aff|.dic) could not be read");
+			if (!dic.canRead()) {
+				throw new FileNotFoundException("The dictionary files " + baseFileName
+						+ " could not be read");
 			}
-	    
-			hunspellDict = hsl.Hunspell_create(aff.toString(), dic.toString());
-			encoding = hsl.Hunspell_get_dic_encoding(hunspellDict);
 
+			hunspellDict = hsl.hnj_hyphen_load(dic.toString());
 			// This will blow up if the encoding doesn't exist
-			stringToBytes("test"); 
+			// TODO remove if we know what it actually does
+			stringToBytes("test");
 		}
 
 		/**
@@ -276,73 +277,40 @@ public class Hunspell {
 		 */
 		public void destroy() {
 			if (hsl != null && hunspellDict != null) {
-				hsl.Hunspell_destroy(hunspellDict);
+				hsl.hnj_hyphen_free(hunspellDict);
 				hunspellDict = null;
 			}
 		}
 
 		/**
 		 * Check if a word is spelled correctly
-		 *
-		 * @param word The word to check.
+		 * 
+		 * @param word
+		 *          The word to check.
 		 */
-		public boolean misspelled(String word) {
-			try {
-				return hsl.Hunspell_spell(hunspellDict, stringToBytes(word)) == 0;
-			} catch (UnsupportedEncodingException e) {
-				return true; // this should probably never happen.
-			}
+		public String hyphenate(final String word) {
+			PointerByReference rep = new PointerByReference();
+			PointerByReference pos = new PointerByReference();
+			PointerByReference cut = new PointerByReference();
+
+			byte[] asciiWord = word.getBytes(Charset.forName("ISO-8859-1"));
+			byte[] hyphens = new byte[asciiWord.length + 1];
+			byte[] hyphenated = new byte[asciiWord.length * 2];
+
+			// TODO use return value
+			@SuppressWarnings("unused")
+			int success = hsl.hnj_hyphen_hyphenate2(hunspellDict, asciiWord,
+					asciiWord.length, hyphens, hyphenated, rep, pos, cut);
+			return new String(hyphenated, Charset.forName("ISO-8859-1"));
 		}
 
 		/**
-		 * Convert a Java string to a zero terminated byte array, in the
-		 * encoding of the dictionary, as expected by the hunspell functions.
+		 * Convert a Java string to a zero terminated byte array, in the encoding of
+		 * the dictionary, as expected by the hunspell functions.
 		 */
-		protected byte[] stringToBytes(String str)
-			throws UnsupportedEncodingException {
-			return (str+"\u0000").getBytes(encoding);
+		protected byte[] stringToBytes(final String str)
+				throws UnsupportedEncodingException {
+			return (str + "\u0000").getBytes(encoding);
 		}
-
-		/**
-		 * Returns a list of suggestions 
-		 *
-		 * @param word The word to check and offer suggestions for
-		 */
-		public List<String> suggest(String word) {
-			List<String> res = new ArrayList<String>();
-			try {		
-				int suggestionsCount = 0;
-				PointerByReference suggestions = new PointerByReference();
-                suggestionsCount = hsl.Hunspell_suggest(
-														hunspellDict, suggestions, stringToBytes(word));
-				if (suggestionsCount == 0) {
-					return res;
-				}
-
-				// Get each of the suggestions out of the pointer array.
-				Pointer[] pointerArray = suggestions.getValue().
-					getPointerArray(0, suggestionsCount);
-		
-				for (int i=0; i<suggestionsCount; i++) {
-
-					/* This only works for 8 bit chars, luckily hunspell uses either
-					   8 bit encodings or utf8, if someone implements support in
-					   hunspell for utf16 we are in trouble.
-					*/		    
-					long len = pointerArray[i].indexOf(0, (byte)0); 
-					if (len != -1) {
-						if (len > Integer.MAX_VALUE) {
-							throw new RuntimeException(
-													   "String improperly terminated: " + len);
-						}
-						byte[] data = pointerArray[i].getByteArray(0, (int)len);
-						res.add(new String(data, encoding));
-					}
-				}
-		
-			} catch (UnsupportedEncodingException ex) { } // Shouldn't happen...
-
-			return res;
-		}
-    }
+	}
 }
