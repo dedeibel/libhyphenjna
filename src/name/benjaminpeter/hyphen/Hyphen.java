@@ -108,7 +108,6 @@ public class Hyphen {
 
 			} catch (IOException e) {
 				throw new Error("Failed to create temporary file for " + libFile, e);
-
 			} finally {
 				try {
 					is.close();
@@ -301,7 +300,20 @@ public class Hyphen {
 			@SuppressWarnings("unused")
 			int success = hsl.hnj_hyphen_hyphenate2(hunspellDict, asciiWord,
 					asciiWord.length, hyphens, hyphenated, rep, pos, cut);
-			return new String(hyphenated, Charset.forName("ISO-8859-1"));
+			return new String(hyphenated, 0, strlen(hyphenated),
+					Charset.forName("ISO-8859-1"));
+		}
+
+		/*
+		 * Determine the size of the string, byte is expected to be a zero
+		 * terminated C-string.
+		 */
+		private int strlen(final byte[] hyphenated) {
+			int i = 0;
+			while (hyphenated[i] != 0) {
+				i++;
+			}
+			return i;
 		}
 
 		/**
