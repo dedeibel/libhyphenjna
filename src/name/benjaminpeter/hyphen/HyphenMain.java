@@ -20,7 +20,7 @@ public class HyphenMain {
 				final String dict = args[0];
 				final String word = args[1];
 				System.err.println("Loading Hyphen, dict: " + dict + " word: " + word);
-				Hyphen.Dictionary d = Hyphen.getInstance().getDictionary(dict);
+				Dictionary d = Hyphen.getInstance().getDictionary(dict);
 				System.err.println("Hyphen library and dictionary loaded");
 
 				String hyphenated = d.hyphenate(word);

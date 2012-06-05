@@ -6,17 +6,15 @@ import java.util.HashMap;
 import java.io.UnsupportedEncodingException;
 import java.lang.UnsatisfiedLinkError;
 import java.lang.UnsupportedOperationException;
-import java.nio.charset.Charset;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 
 import com.sun.jna.Native;
-import com.sun.jna.Pointer;
-import com.sun.jna.ptr.PointerByReference;
 
 /**
- * @author Benjamin Peter <BenjaminPeter@arcor.de>
+ * @author Benjamin Peter <BenjaminPeter@arcor.de> originally: Flemming Frandsen
+ *         (flfr at stibo dot com)
  */
 public class Hyphen {
 
@@ -25,7 +23,7 @@ public class Hyphen {
 	/**
 	 * The native library instance, created by JNA.
 	 */
-	private HyphenLibrary hsl = null;
+	private HyphenLibrary hunspellLibrary = null;
 
 	/**
 	 * The library file that was loaded.
@@ -60,7 +58,8 @@ public class Hyphen {
 
 	protected void tryLoad(final String libFile)
 			throws UnsupportedOperationException {
-		hsl = (HyphenLibrary) Native.loadLibrary(libFile, HyphenLibrary.class);
+		hunspellLibrary = (HyphenLibrary) Native.loadLibrary(libFile,
+				HyphenLibrary.class);
 	}
 
 	/**
@@ -81,7 +80,8 @@ public class Hyphen {
 
 		libFile = libDir != null ? libDir + "/" + libName() : libNameBare();
 		try {
-			hsl = (HyphenLibrary) Native.loadLibrary(libFile, HyphenLibrary.class);
+			hunspellLibrary = (HyphenLibrary) Native.loadLibrary(libFile,
+					HyphenLibrary.class);
 		} catch (UnsatisfiedLinkError urgh) {
 
 			// Oh dear, the library was not found in the file system, let's try the
@@ -121,8 +121,8 @@ public class Hyphen {
 				}
 			}
 			System.out.println("Loading temp lib: " + lib.getAbsolutePath());
-			hsl = (HyphenLibrary) Native.loadLibrary(lib.getAbsolutePath(),
-					HyphenLibrary.class);
+			hunspellLibrary = (HyphenLibrary) Native.loadLibrary(
+					lib.getAbsolutePath(), HyphenLibrary.class);
 		}
 	}
 
@@ -139,11 +139,9 @@ public class Hyphen {
 		String os = System.getProperty("os.name").toLowerCase();
 		if (os.startsWith("windows")) {
 			return libNameBare() + ".dll";
-
 		} else if (os.startsWith("mac os x")) {
 			// return libNameBare()+".dylib";
 			return libNameBare() + ".jnilib";
-
 		} else {
 			return "lib" + libNameBare() + ".so";
 		}
@@ -211,13 +209,11 @@ public class Hyphen {
 	public Dictionary getDictionary(final String baseFileName)
 			throws FileNotFoundException, UnsupportedEncodingException {
 
-		// TODO: Detect if the dictionary files have changed and reload if they
-		// have.
+		/* TODO: Detect if the dictionary files have changed and reload if they have */
 		if (map.containsKey(baseFileName)) {
 			return map.get(baseFileName);
-
 		} else {
-			Dictionary d = new Dictionary(baseFileName);
+			Dictionary d = new Dictionary(hunspellLibrary, baseFileName);
 			map.put(baseFileName, d);
 			return d;
 		}
@@ -235,94 +231,4 @@ public class Hyphen {
 		}
 	}
 
-	/**
-	 * Class representing a single dictionary.
-	 */
-	public class Dictionary {
-		/**
-		 * The pointer to the hunspell object as returned by the hunspell
-		 * constructor.
-		 */
-		private Pointer hunspellDict = null;
-
-		/**
-		 * The encoding used by this dictionary
-		 */
-		private final String encoding = "UTF8";
-
-		/**
-		 * Creates an instance of the dictionary.
-		 * 
-		 * @param baseFileName
-		 *          the base name of the dictionary,
-		 */
-		Dictionary(final String baseFileName) throws FileNotFoundException,
-				UnsupportedEncodingException {
-			File dic = new File(baseFileName);
-
-			if (!dic.canRead()) {
-				throw new FileNotFoundException("The dictionary files " + baseFileName
-						+ " could not be read");
-			}
-
-			hunspellDict = hsl.hnj_hyphen_load(dic.toString());
-			// This will blow up if the encoding doesn't exist
-			// TODO remove if we know what it actually does
-			stringToBytes("test");
-		}
-
-		/**
-		 * Deallocate the dictionary.
-		 */
-		public void destroy() {
-			if (hsl != null && hunspellDict != null) {
-				hsl.hnj_hyphen_free(hunspellDict);
-				hunspellDict = null;
-			}
-		}
-
-		/**
-		 * Check if a word is spelled correctly
-		 * 
-		 * @param word
-		 *          The word to check.
-		 */
-		public String hyphenate(final String word) {
-			PointerByReference rep = new PointerByReference();
-			PointerByReference pos = new PointerByReference();
-			PointerByReference cut = new PointerByReference();
-
-			byte[] asciiWord = word.getBytes(Charset.forName("ISO-8859-1"));
-			byte[] hyphens = new byte[asciiWord.length + 1];
-			byte[] hyphenated = new byte[asciiWord.length * 2];
-
-			// TODO use return value
-			@SuppressWarnings("unused")
-			int success = hsl.hnj_hyphen_hyphenate2(hunspellDict, asciiWord,
-					asciiWord.length, hyphens, hyphenated, rep, pos, cut);
-			return new String(hyphenated, 0, strlen(hyphenated),
-					Charset.forName("ISO-8859-1"));
-		}
-
-		/*
-		 * Determine the size of the string, byte is expected to be a zero
-		 * terminated C-string.
-		 */
-		private int strlen(final byte[] hyphenated) {
-			int i = 0;
-			while (hyphenated[i] != 0) {
-				i++;
-			}
-			return i;
-		}
-
-		/**
-		 * Convert a Java string to a zero terminated byte array, in the encoding of
-		 * the dictionary, as expected by the hunspell functions.
-		 */
-		protected byte[] stringToBytes(final String str)
-				throws UnsupportedEncodingException {
-			return (str + "\u0000").getBytes(encoding);
-		}
-	}
 }
