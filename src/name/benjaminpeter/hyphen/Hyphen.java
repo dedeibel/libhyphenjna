@@ -1,9 +1,7 @@
 package name.benjaminpeter.hyphen;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.HashMap;
-import java.io.UnsupportedEncodingException;
 import java.lang.UnsatisfiedLinkError;
 import java.lang.UnsupportedOperationException;
 import java.io.FileOutputStream;
@@ -205,9 +203,10 @@ public class Hyphen {
 	 * @param baseFileName
 	 *          the base name of the dictionary, passing /dict/da_DK means that
 	 *          the files /dict/da_DK.dic and /dict/da_DK.aff get loaded
+	 * @throws IOException
+	 *           If the dictionary file could not be read
 	 */
-	public Dictionary getDictionary(final String baseFileName)
-			throws FileNotFoundException, UnsupportedEncodingException {
+	public Dictionary getDictionary(final String baseFileName) throws IOException {
 
 		/* TODO: Detect if the dictionary files have changed and reload if they have */
 		if (map.containsKey(baseFileName)) {

@@ -1,9 +1,15 @@
 package name.benjaminpeter.hyphen;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
 
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;
@@ -20,8 +26,7 @@ public class Dictionary {
 	/**
 	 * The encoding used by this dictionary
 	 */
-	// private final String encoding = "UTF8";
-	private final String encoding = "ISO-8859-1";
+	private final String encoding;
 
 	private final HyphenLibrary hunspellLibrary;
 
@@ -32,9 +37,11 @@ public class Dictionary {
 	 *          The hunspell native library inside of class Hyphen
 	 * @param baseFileName
 	 *          the base name of the dictionary,
+	 * @throws IOException
+	 *           If the dictionary file could not be read
 	 */
 	Dictionary(final HyphenLibrary hunspellLibrary, final String baseFileName)
-			throws FileNotFoundException, UnsupportedEncodingException {
+			throws IOException {
 		this.hunspellLibrary = hunspellLibrary;
 		File dic = new File(baseFileName);
 
@@ -44,8 +51,22 @@ public class Dictionary {
 		}
 
 		hunspellDict = hunspellLibrary.hnj_hyphen_load(dic.toString());
-		// TODO get encoding by reading the fist line of the file
-		// encoding = hunspellLibrary.Hunspell_get_dic_encoding(hunspellDict);
+		encoding = determineEncoding(dic);
+	}
+
+	private String determineEncoding(final File dic) throws IOException {
+		InputStream fis = new FileInputStream(dic);
+		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+		String line;
+		if ((line = br.readLine()) != null) {
+			try {
+				return Charset.forName(line).name();
+			} catch (UnsupportedCharsetException e) {
+				System.err.println("Could not determine dic encoding by first line: '"
+						+ line + "' using latin1.");
+			}
+		}
+		return "ISO-8859-1";
 	}
 
 	/**
@@ -73,7 +94,12 @@ public class Dictionary {
 		PointerByReference cut = new PointerByReference();
 
 		try {
-			byte[] asciiWord = stringToBytes(word);
+			/*
+			 * Case must be converted to lower case before hyphenation. The encoding
+			 * must also match the dictionary's encoding. And finally we need to
+			 * create a null terimated C-String.
+			 */
+			byte[] asciiWord = stringToBytes(word.toLowerCase(), encoding);
 			byte[] hyphens = new byte[asciiWord.length + 1];
 			byte[] hyphenated = new byte[asciiWord.length * 2];
 
@@ -108,7 +134,7 @@ public class Dictionary {
 	 * Convert a Java string to a zero terminated byte array, in the encoding of
 	 * the dictionary, as expected by the hunspell functions.
 	 */
-	protected byte[] stringToBytes(final String str)
+	protected byte[] stringToBytes(final String str, final String encoding)
 			throws UnsupportedEncodingException {
 		return (str + "\u0000").getBytes(encoding);
 	}

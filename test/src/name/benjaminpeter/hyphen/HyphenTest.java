@@ -2,14 +2,14 @@ package name.benjaminpeter.hyphen;
 
 import static org.junit.Assert.*;
 
-import java.io.FileNotFoundException;
-import java.io.UnsupportedEncodingException;
-
+import java.io.IOException;
 import org.junit.Test;
 
 public class HyphenTest {
 
-	private static final String DIC_PATH = "/Users/bpeter/Projects/libhyphenjna/data/hyph_de_DE.dic";
+	private static final String DIC_PATH = "test/resources/hyph_mini_de_iso.dic";
+
+	private static final String DIC_PATH_UTF8 = "test/resources/hyph_mini_de_utf8.dic";
 
 	@Test
 	public void testInstance() {
@@ -20,25 +20,31 @@ public class HyphenTest {
 	}
 
 	@Test
-	public void testGetDictionary() throws FileNotFoundException,
-			UnsupportedEncodingException, HyphenationException {
+	public void testGetDictionary() throws HyphenationException, IOException {
 		Hyphen hyphen = Hyphen.getInstance();
 		Dictionary dic = hyphen.getDictionary(DIC_PATH);
 		assertNotNull(dic);
 	}
 
 	@Test
-	public void testHyphenateSimple() throws FileNotFoundException,
-			UnsupportedEncodingException, HyphenationException {
+	public void testHyphenateSimple() throws HyphenationException,
+			UnsatisfiedLinkError, UnsupportedOperationException, IOException {
 		Dictionary dic = Hyphen.getInstance().getDictionary(DIC_PATH);
 		assertEquals("dan=ke", dic.hyphenate("danke"));
-		assertEquals("ver=si=che=rung", dic.hyphenate("versicherung"));
+		assertEquals("ver=si=che=rung", dic.hyphenate("Versicherung"));
 	}
 
 	@Test
-	public void testHyphenateUmlaut() throws FileNotFoundException,
-			UnsupportedEncodingException, HyphenationException {
+	public void testHyphenateUmlaut() throws HyphenationException,
+			UnsatisfiedLinkError, UnsupportedOperationException, IOException {
 		Dictionary dic = Hyphen.getInstance().getDictionary(DIC_PATH);
-		assertEquals("M웘=le", dic.hyphenate("M웘le"));
+		assertEquals("m체h=le", dic.hyphenate("M체hle"));
+	}
+
+	@Test
+	public void testHyphenateUmlautUTF8Dict() throws HyphenationException,
+			UnsatisfiedLinkError, UnsupportedOperationException, IOException {
+		Dictionary dic = Hyphen.getInstance().getDictionary(DIC_PATH_UTF8);
+		assertEquals("m체h=le", dic.hyphenate("M체hle"));
 	}
 }
