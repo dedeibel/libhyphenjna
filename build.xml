@@ -13,7 +13,7 @@
 
 	<target name="compile">
 		<mkdir dir="build/classes" />
-		<javac srcdir="src" destdir="build/classes" debug="true">
+		<javac srcdir="src" destdir="build/classes" debug="true" includeantruntime="false">
 			<classpath>
 				<path refid="classpath" />
 			</classpath>
@@ -150,4 +150,30 @@
 		</exec>
 	</target>
 
+  <target name="test" depends="compile">
+		<mkdir dir="build/test/classes" />
+    <delete>
+      <fileset dir="build/test/classes" includes="*.class"/>
+    </delete>
+		<javac srcdir="test/src" destdir="build/test/classes" debug="true" includeantruntime="false">
+			<classpath>
+				<path refid="classpath" />
+			  <pathelement location="build/classes" />
+			</classpath>
+		</javac>
+    <junit>
+			<classpath>
+			  <pathelement location="build/classes" />
+			  <pathelement location="native-lib" />
+			  <pathelement location="build/test/classes" />
+				<path refid="classpath" />
+			</classpath>
+      <formatter type="plain" usefile="false" /> <!-- to screen -->
+      <batchtest fork="yes">
+        <fileset dir="test/src">
+          <include name="**/*Test*.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
 </project>
