@@ -55,17 +55,35 @@ public class Dictionary {
 	}
 
 	private String determineEncoding(final File dic) throws IOException {
-		InputStream fis = new FileInputStream(dic);
-		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-		String line;
-		if ((line = br.readLine()) != null) {
-			try {
-				return Charset.forName(line).name();
-			} catch (UnsupportedCharsetException e) {
-				System.err.println("Could not determine dic encoding by first line: '"
-						+ line + "' using latin1.");
-			}
-		}
+		InputStream fis       = null;
+    InputStreamReader is  = null;
+		BufferedReader br     = null;
+
+    try {
+		  fis = new FileInputStream(dic);
+      is = new InputStreamReader(fis);
+		  br = new BufferedReader(is);
+		  String line;
+		  if ((line = br.readLine()) != null) {
+		  	try {
+		  		return Charset.forName(line).name();
+		  	} catch (UnsupportedCharsetException e) {
+		  		System.err.println("Could not determine dic encoding by first line: '"
+		  				+ line + "' using latin1.");
+		  	}
+		  }
+    }
+    finally {
+      if (br != null) {
+        br.close();
+      }
+      if (is != null) {
+        is.close();
+      }
+      if (fis != null) {
+        fis.close();
+      }
+    }
 		return "ISO-8859-1";
 	}
 
