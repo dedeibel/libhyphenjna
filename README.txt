@@ -28,6 +28,9 @@ I've included a script called native-build.pl which might help to build
 on at least Linux and Mac and 32 and 64 bit, for windows you
 can take it as a hint of what to do.
 
+When building the sources on your own, make sure you have "gawk" installed if
+you run into related errors.
+
 
 * Building the Java API
 

@@ -29,15 +29,16 @@ int main(int argc, char** argv) {
   printf("So I shall hyphenate this: %s\n", word);
 
   char hword[BUFSIZE];
-  char *hyphens = (char *)malloc(word_length + 5);
-  char ** rep;
-  int * pos;
-  int * cut;
-
   hword[0] = '\0';
-  rep = NULL;
-  pos = NULL;
-  cut = NULL;
+  char *hyphens = (char *)malloc(word_length + 1);
+
+  // Are these correct?
+  char **rep = (char **)malloc(word_length * sizeof(char*));
+  int * pos  = (int*)malloc(word_length * sizeof(int));
+  int * cut  = (int*)malloc(word_length * sizeof(int));
+  memset(rep, 0, word_length * sizeof(char*));
+  memset(pos, 0, word_length * sizeof(int));
+  memset(cut, 0, word_length * sizeof(int));
 
   if (hnj_hyphen_hyphenate2(dict, word, word_length, hyphens, hword, &rep, &pos, &cut)) {
     free(hyphens);
@@ -47,7 +48,7 @@ int main(int argc, char** argv) {
   }
 
   printf("Hyphens: ");
-  for (int i = 0; i < word_length; ++i) {
+  for (int i = 0; i < word_length + 1; ++i) {
     if (hyphens[i] & 1) {
        printf(".-");
     }
@@ -58,7 +59,29 @@ int main(int argc, char** argv) {
   printf("\n");
   printf("Hyphenated word: %s\n", hword);
 
-  // TODO rep and cut etc not set, why?
+  // rep and cut etc not set, why? - Schifffart from the header doku used ...
+  printf("rep: ");
+  for (int i = 0; i < word_length; ++i) {
+    if (rep[i] != NULL) {
+       printf("%s", rep[i]);
+    }
+    else {
+       printf("_");
+    }
+  }
+  printf("\n");
+
+  printf("pos: ");
+  for (int i = 0; i < word_length; ++i) {
+    printf("%d", pos[i]);
+  }
+  printf("\n");
+
+  printf("cut: ");
+  for (int i = 0; i < word_length; ++i) {
+    printf("%d", cut[i]);
+  }
+  printf("\n");
 
   free(hyphens);
   free(word);

@@ -19,7 +19,8 @@ public class HyphenMain {
 			} else if (args.length == 2) {
 				final String dict = args[0];
 				final String word = args[1];
-				System.err.println("Loading Hyphen, dict: " + dict + " word: " + word);
+				System.err.println("Loading Hyphen, dict: " + dict + " word: "
+						+ word);
 				Dictionary d = Hyphen.getInstance().getDictionary(dict);
 				System.err.println("Hyphen library and dictionary loaded");
 

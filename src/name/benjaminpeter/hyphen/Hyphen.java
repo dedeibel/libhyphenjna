@@ -42,7 +42,7 @@ public class Hyphen {
 	 * directory specified.
 	 * 
 	 * @param libDir
-	 *          Optional absolute directory where the native lib can be found.
+	 *            Optional absolute directory where the native lib can be found.
 	 */
 	public static Hyphen getInstance(final String libDir)
 			throws UnsatisfiedLinkError, UnsupportedOperationException {
@@ -64,14 +64,14 @@ public class Hyphen {
 	 * Constructor for the library, loads the native lib.
 	 * 
 	 * Loading is done in the first of the following three ways that works: 1)
-	 * Unmodified load in the provided directory. 2) libFile stripped back to the
-	 * base name (^lib(.*)\.so on unix) 3) The library is searched for in the
-	 * classpath, extracted to disk and loaded.
+	 * Unmodified load in the provided directory. 2) libFile stripped back to
+	 * the base name (^lib(.*)\.so on unix) 3) The library is searched for in
+	 * the classpath, extracted to disk and loaded.
 	 * 
 	 * @param libDir
-	 *          Optional absolute directory where the native lib can be found.
+	 *            Optional absolute directory where the native lib can be found.
 	 * @throws UnsupportedOperationException
-	 *           if the OS or architecture is simply not supported.
+	 *             if the OS or architecture is simply not supported.
 	 */
 	protected Hyphen(final String libDir) throws UnsatisfiedLinkError,
 			UnsupportedOperationException {
@@ -82,7 +82,8 @@ public class Hyphen {
 					HyphenLibrary.class);
 		} catch (UnsatisfiedLinkError urgh) {
 
-			// Oh dear, the library was not found in the file system, let's try the
+			// Oh dear, the library was not found in the file system, let's try
+			// the
 			// classpath
 			libFile = libName();
 			InputStream is = Hyphen.class.getResourceAsStream("/" + libFile);
@@ -105,7 +106,8 @@ public class Hyphen {
 				}
 
 			} catch (IOException e) {
-				throw new Error("Failed to create temporary file for " + libFile, e);
+				throw new Error("Failed to create temporary file for "
+						+ libFile, e);
 			} finally {
 				try {
 					is.close();
@@ -130,8 +132,8 @@ public class Hyphen {
 
 	/**
 	 * Calculate the filename of the native hunspell lib. The files have
-	 * completely different names to allow them to live in the same directory and
-	 * avoid confusion.
+	 * completely different names to allow them to live in the same directory
+	 * and avoid confusion.
 	 */
 	public static String libName() throws UnsupportedOperationException {
 		String os = System.getProperty("os.name").toLowerCase();
@@ -182,7 +184,7 @@ public class Hyphen {
 				return "hyphen-linux-x86-64";
 			}
 
-		} else if (os.startsWith("sunos")) {
+			// } else if (os.startsWith("sunos")) {
 			// if (arch.equals("sparc")) {
 			// return "hyphen-sunos-sparc-64";
 			// }
@@ -201,14 +203,18 @@ public class Hyphen {
 	 * Gets an instance of the dictionary.
 	 * 
 	 * @param baseFileName
-	 *          the base name of the dictionary, passing /dict/da_DK means that
-	 *          the files /dict/da_DK.dic and /dict/da_DK.aff get loaded
+	 *            the base name of the dictionary, passing /dict/da_DK means
+	 *            that the files /dict/da_DK.dic and /dict/da_DK.aff get loaded
 	 * @throws IOException
-	 *           If the dictionary file could not be read
+	 *             If the dictionary file could not be read
 	 */
-	public Dictionary getDictionary(final String baseFileName) throws IOException {
+	public Dictionary getDictionary(final String baseFileName)
+			throws IOException {
 
-		/* TODO: Detect if the dictionary files have changed and reload if they have */
+		/*
+		 * TODO: Detect if the dictionary files have changed and reload if they
+		 * have
+		 */
 		if (map.containsKey(baseFileName)) {
 			return map.get(baseFileName);
 		} else {
@@ -222,7 +228,7 @@ public class Hyphen {
 	 * Removes a dictionary from the internal cache
 	 * 
 	 * @param baseFileName
-	 *          the base name of the dictionary, as passed to getDictionary()
+	 *            the base name of the dictionary, as passed to getDictionary()
 	 */
 	public void destroyDictionary(final String baseFileName) {
 		if (map.containsKey(baseFileName)) {

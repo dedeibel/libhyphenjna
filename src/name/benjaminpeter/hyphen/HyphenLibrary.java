@@ -16,7 +16,7 @@ public interface HyphenLibrary extends Library {
 	 * Create the hyphen lib instance
 	 * 
 	 * @param fn
-	 *          The hyphenation file path
+	 *            The hyphenation file path
 	 * @return The hyphen library object
 	 */
 	public Pointer hnj_hyphen_load(String fn);
@@ -25,7 +25,7 @@ public interface HyphenLibrary extends Library {
 	 * Free the hyphen lib
 	 * 
 	 * @param dict
-	 *          The hyphen library object returned by Hyphen_load
+	 *            The hyphen library object returned by Hyphen_load
 	 */
 	public void hnj_hyphen_free(Pointer dict);
 
