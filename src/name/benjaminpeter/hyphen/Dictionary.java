@@ -183,6 +183,53 @@ public class Dictionary {
 		}
 	}
 
+	/**
+	 * 
+	 * @return A collection of separatable syllable of the word. For example
+   * "dan=ke" becomes "dan" and "ke". A non splitted word will return one
+   * entry with the whole word.
+	 */
+	public Collection<String> syllables(final String word)
+			throws HyphenationException {
+		try {
+			/*
+			 * Case must be converted to lower case before hyphenation. The
+			 * encoding must also match the dictionary's encoding. And finally
+			 * we need to create a null terminated C-String.
+			 */
+			byte[] asciiWord = convertWordToCString(word, encoding);
+			byte[] hyphens = createHyphensBuffer(asciiWord.length);
+			/*
+			 * I didn't understand how the "complementary" thing works yet, so
+			 * just pass in null for now.
+			 */
+			int success = hunspellLibrary.hnj_hyphen_hyphenate2(hunspellDict,
+					asciiWord, asciiWord.length, hyphens, null,
+					newPointerRef(), newPointerRef(), newPointerRef());
+			if (success != 0) {
+				throw new HyphenationException(
+						"Hyphenation failed, please check input encoding and stderr output.");
+			}
+
+			List<String> syllables = new LinkedList<String>();
+
+      int start = 0;
+      int length = 0;
+			for (int i = 0; i < asciiWord.length + 1; ++i) {
+				if ((hyphens[i] & 1) == 1) {
+          length = i + 1;
+          syllables.add(word.substring(start, length)); 
+          start = length;  
+				}
+			}
+      syllables.add(word.substring(start)); 
+      return syllables;
+		} catch (UnsupportedEncodingException e) {
+			throw new HyphenationException(
+					"Hyphenation failed, please check system available encodings.");
+		}
+	}
+
 	private byte[] createHyphenatedBuffer(int length) {
 		return new byte[length * 2];
 	}
