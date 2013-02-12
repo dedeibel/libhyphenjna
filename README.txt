@@ -68,7 +68,7 @@ At the moment the package contains copies of:
 * jna.jar version 3.4.0 
 * hyphen version 3.8.3
 * junit 4
-* hamcrest 1.2
+* hamcrest 1.3
 
 
 
