@@ -66,7 +66,7 @@ Andrzej Zydron figured out how to build libhunspell for 64 bit OSX.
 
 At the moment the package contains copies of:
 * jna.jar version 3.4.0 
-* hyphen version 3.8.3
+* hyphen version 2.8.3
 * junit 4
 * hamcrest 1.3
 
