@@ -1,0 +1,2 @@
+# Install the lib to the local mvn repo
+mvn install:install-file -Dfile=build/jar/hyphen.jar -DgroupId=name.benjaminpeter -DartifactId=hyphen -Dversion=1.0.0 -Dpackaging=jar
